@@ -36,23 +36,26 @@ exports.receiveImage = void 0;
 const fs = __importStar(require("fs"));
 function receiveImage(socket) {
     return __awaiter(this, void 0, void 0, function* () {
-        socket.on("image2.0", (data, response1) => {
-            console.log(`Receiving image: ${JSON.stringify(data, null, 4)}`);
-            let chunks = Array.from({ length: data.size });
-            let i = 0;
-            socket.on(data.id, (data2, response2) => {
-                console.log("Receiving data", data2.pos);
-                chunks[data2.pos] = data2.base64;
-                i++;
-                if (i >= data.size) {
-                    console.log("FIN");
-                    let filename = Date.now().toString() + ".png";
-                    var buf = Buffer.from(chunks.join(""), "base64");
-                    fs.writeFileSync("./img/" + filename, buf);
-                    socket.removeAllListeners(data.id);
-                }
+        return new Promise((resolve) => {
+            socket.on("image2.0", (data, response1) => {
+                console.log(`Receiving image: ${JSON.stringify(data, null, 4)}`);
+                let chunks = Array.from({ length: data.size });
+                let i = 0;
+                socket.on(data.id, (data2, response2) => {
+                    console.log("Receiving data", data2.pos);
+                    chunks[data2.pos] = data2.base64;
+                    i++;
+                    if (i >= data.size) {
+                        console.log("FIN");
+                        let filename = Date.now().toString() + ".png";
+                        var buf = Buffer.from(chunks.join(""), "base64");
+                        fs.writeFileSync("./img/" + filename, buf);
+                        socket.removeAllListeners(data.id);
+                        resolve(filename);
+                    }
+                });
+                response1(data);
             });
-            response1(data);
         });
     });
 }
